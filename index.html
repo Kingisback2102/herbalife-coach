@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Herbalife Coach - Persönliche Produktempfehlung</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <script type="text/babel">
+        const { useState } = React;
+
+        // VOLLSTÄNDIGE PRODUKTDATENBANK (90+ Produkte)
+        const products = {
+            // FORMULA 1 - Hauptprodukte
+            F1_VAN: { name: 'Formula 1 Vanilla', price: 45, benefits: ['18g Protein', '25 Vitamine', 'Sättigung'], reason: 'Gewichtskontrolle' },
+            F1_CHO: { name: 'Formula 1 Chocolate', price: 45, benefits: ['18g Protein', '25 Vitamine'], reason: 'Gewichtskontrolle' },
+            F1_BAN: { name: 'Formula 1 Banana', price: 45, benefits: ['18g Protein', '25 Vitamine'], reason: 'Gewichtskontrolle' },
+            F1_STR: { name: 'Formula 1 Erdbeere', price: 45, benefits: ['18g Protein', '25 Vitamine'], reason: 'Gewichtskontrolle' },
+            F1_COOK: { name: 'Formula 1 Cookie Crunch', price: 45, benefits: ['18g Protein', '25 Vitamine'], reason: 'Gewichtskontrolle' },
+            F1_CAFL: { name: 'Formula 1 Café Latte', price: 45, benefits: ['18g Protein', '25 Vitamine', 'Koffein'], reason: 'Gewichtskontrolle', warnings: 'Koffein' },
+            F1_MINC: { name: 'Formula 1 Mint Chocolate', price: 45, benefits: ['18g Protein', '25 Vitamine'], reason: 'Gewichtskontrolle' },
+            
+            // TEE & ENERGIE
+            TEA_ORI: { name: 'Kräutertee Original', price: 35, benefits: ['85mg Koffein', 'Thermogenese', 'Energie'], reason: 'Stoffwechsel', warnings: 'Koffein' },
+            TEA_LEM: { name: 'Kräutertee Lemon', price: 35, benefits: ['85mg Koffein', 'Thermogenese'], reason: 'Stoffwechsel', warnings: 'Koffein' },
+            TEA_PEA: { name: 'Kräutertee Pfirsich', price: 35, benefits: ['85mg Koffein', 'Erfrischend'], reason: 'Stoffwechsel', warnings: 'Koffein' },
+            TEA_MAL: { name: 'Kräutertee Himbeere', price: 35, benefits: ['85mg Koffein', 'Antioxidantien'], reason: 'Stoffwechsel', warnings: 'Koffein' },
+            LIFT_GRP: { name: 'LiftOff Max Grapefruit', price: 25, benefits: ['180mg Koffein', 'Energy-Kick'], reason: 'Energie', warnings: 'Koffein' },
+            HPIC_LAT: { name: 'Iced Coffee Latte', price: 40, benefits: ['15g Protein', 'Koffein'], reason: 'Energie', warnings: 'Koffein' },
+            HPIC_MOC: { name: 'Iced Coffee Mocha', price: 40, benefits: ['15g Protein', 'Koffein'], reason: 'Energie', warnings: 'Koffein' },
+            
+            // ALOE & VERDAUUNG
+            ALOE_ORI: { name: 'Aloe Vera Original', price: 30, benefits: ['97% Aloe', 'Verdauung', 'Darmflora'], reason: 'Verdauung' },
+            ALOE_MAN: { name: 'Aloe Vera Mango', price: 30, benefits: ['97% Aloe', 'Verdauung'], reason: 'Verdauung' },
+            ALOE_MAX: { name: 'AloeMax', price: 35, benefits: ['Aloe konzentriert', 'Immunsystem'], reason: 'Verdauung' },
+            OAT_FBR: { name: 'Hafer-Apfel-Ballaststoff', price: 25, benefits: ['5g Ballaststoffe', 'Sättigung'], reason: 'Verdauung' },
+            MICR_MAX: { name: 'Microbiotic Max', price: 35, benefits: ['Probiotika', 'Darmflora'], reason: 'Verdauung' },
+            
+            // SPORT & REGENERATION
+            H24_HYDR: { name: 'H24 Hydrate', price: 30, benefits: ['Elektrolyte', 'Hydration'], reason: 'Sport-Hydration' },
+            H24_CR7: { name: 'CR7 Drive', price: 45, benefits: ['Ausdauer', 'Elektrolyte'], reason: 'Training' },
+            H24_REBUILD: { name: 'Rebuild Strength', price: 55, benefits: ['25g Protein', 'Muskelaufbau'], reason: 'Regeneration' },
+            H24_REBUILD_END: { name: 'Rebuild Endurance', price: 50, benefits: ['Kohlenhydrate', 'Ausdauer'], reason: 'Ausdauer' },
+            H24_PROLONG: { name: 'Prolong', price: 45, benefits: ['Ausdauer', 'Kohlenhydrate'], reason: 'Ausdauer' },
+            H24_PREPARE: { name: 'H24 Prepare Pre-Workout', price: 35, benefits: ['100mg Koffein', 'Creatin', 'Fokus'], reason: 'Pre-Workout', warnings: 'Koffein' },
+            H24_RESTORE: { name: 'H24 Restore', price: 30, benefits: ['Regeneration', 'Elektrolyte'], reason: 'Post-Workout' },
+            
+            // PROTEIN
+            PDM_VAN: { name: 'Protein-Mix Vanille', price: 40, benefits: ['15g Protein', 'Sättigung'], reason: 'Protein-Boost' },
+            PDM_CHO: { name: 'Protein-Mix Chocolate', price: 40, benefits: ['15g Protein', 'Sättigung'], reason: 'Protein-Boost' },
+            TRI_SEL_BAN: { name: 'Tri Blend Banana (vegan)', price: 50, benefits: ['20g Protein', 'Vegan'], reason: 'Veganes Protein' },
+            TRI_SEL_CHO: { name: 'Tri Blend Chocolate (vegan)', price: 50, benefits: ['20g Protein', 'Vegan'], reason: 'Veganes Protein' },
+            TRI_SEL_COC: { name: 'Tri Blend Coconut (vegan)', price: 50, benefits: ['20g Protein', 'Erfrischend'], reason: 'Veganes Protein' },
+            
+            // RIEGEL & SNACKS
+            F1X_DC: { name: 'F1 Express Riegel Dark Chocolate', price: 20, benefits: ['13g Protein', 'Mahlzeitersatz'], reason: 'Unterwegs' },
+            H24_ACH_DC: { name: 'H24 Achieve Riegel Dark Chocolate', price: 22, benefits: ['20g Protein', 'Sport-Snack'], reason: 'Sport-Snack' },
+            H24_ACH_CC: { name: 'H24 Achieve Riegel Cookies & Cream', price: 22, benefits: ['20g Protein', 'Sport-Snack'], reason: 'Sport-Snack' },
+            PROT_BITES: { name: 'Protein Bites Vanilla', price: 20, benefits: ['4g Protein', 'Mini-Snack'], reason: 'Snack' },
+            PROT_CHIPS_BBQ: { name: 'Protein Chips Barbecue', price: 18, benefits: ['11g Protein', 'Knusprig'], reason: 'Snack' },
+            PROT_CHIPS_SC: { name: 'Protein Chips Sour Cream', price: 18, benefits: ['11g Protein', 'Knusprig'], reason: 'Snack' },
+            SOUP_TOM: { name: 'Tomatensuppe', price: 25, benefits: ['7g Protein', 'Herzhaft'], reason: 'Herzhafte Mahlzeit' },
+            
+            // BEAUTY & KOLLAGEN
+            COLL_SKIN: { name: 'Collagen Beauty Booster', price: 50, benefits: ['5000mg Kollagen', 'Hautelastizität', 'Anti-Aging'], reason: 'Beauty' },
+            SKIN_CLEANSER: { name: 'SKIN Reinigungsgel', price: 35, benefits: ['Aloe Vera', 'Sanfte Reinigung'], reason: 'Gesichtspflege' },
+            SKIN_TONER: { name: 'SKIN Toner', price: 30, benefits: ['Vit B3, C, E', 'Porenpflege'], reason: 'Gesichtspflege' },
+            SKIN_DAY_CREAM: { name: 'SKIN Tagescreme', price: 40, benefits: ['Feuchtigkeit', 'Ausstrahlung'], reason: 'Gesichtspflege' },
+            SKIN_NIGHT_CREAM: { name: 'SKIN Nachtcreme', price: 40, benefits: ['Regeneration', 'Anti-Aging'], reason: 'Gesichtspflege' },
+            SKIN_EYE_GEL: { name: 'SKIN Augen-Gel', price: 35, benefits: ['Straffung', 'Frische'], reason: 'Augenpflege' },
+            SKIN_EYE_CREAM: { name: 'SKIN Augencreme', price: 35, benefits: ['Feuchtigkeit', 'Glättung'], reason: 'Augenpflege' },
+            SKIN_SERUM: { name: 'SKIN Line Minimizing Serum', price: 45, benefits: ['Peptide', 'Vit B3, C, E'], reason: 'Anti-Aging' },
+            SKIN_MASK: { name: 'SKIN Clay Mask', price: 30, benefits: ['Bentonit-Ton', 'Tiefenreinigung'], reason: 'Gesichtsmaske' },
+            SKIN_SCRUB: { name: 'SKIN Berry Scrub', price: 30, benefits: ['Jojobaperlen', 'Peeling'], reason: 'Peeling' },
+            
+            // HAARPFLEGE
+            ALOE_SHAMPOO: { name: 'Aloe Shampoo', price: 25, benefits: ['Aloe Vera', 'Stärkung'], reason: 'Haarpflege' },
+            ALOE_CONDITIONER: { name: 'Aloe Conditioner', price: 25, benefits: ['Geschmeidigkeit', 'Feuchtigkeit'], reason: 'Haarpflege' },
+            
+            // KÖRPERPFLEGE
+            ALOE_BODY_GEL: { name: 'Aloe Soothing Gel', price: 20, benefits: ['Beruhigt', 'Kühlt'], reason: 'Körperpflege' },
+            ALOE_LOTION: { name: 'Aloe Hand & Body Lotion', price: 22, benefits: ['Shea Butter', 'Feuchtigkeit'], reason: 'Körperpflege' },
+            ALOE_SOAP: { name: 'Aloe Bath & Body Bar', price: 15, benefits: ['Olive Oil', 'Sanfte Reinigung'], reason: 'Körperpflege' },
+            
+            // VITAMINE & SUPPLEMENTS
+            OMEGA3: { name: 'Herbalifeline Max Omega-3', price: 45, benefits: ['EPA/DHA', 'Herz & Gehirn'], reason: 'Herz-Gesundheit' },
+            NITRO: { name: 'Niteworks', price: 55, benefits: ['L-Arginin', 'L-Citrullin'], reason: 'Regeneration nachts' },
+            MIND: { name: 'Active Mind Complex', price: 40, benefits: ['Ginkgo', 'Fokus', 'B-Vitamine'], reason: 'Konzentration' },
+            CELL_ACT: { name: 'Cell Activator', price: 40, benefits: ['Alpha-Liponsäure', 'B-Vitamine'], reason: 'Zellenergie' },
+            THERMO: { name: 'Thermo Complete', price: 35, benefits: ['Guarana', '75mg Koffein'], reason: 'Fettverbrennung', warnings: 'Koffein' },
+            XTRACAL: { name: 'XtraCal', price: 30, benefits: ['800mg Calcium', 'Vit D', 'Magnesium'], reason: 'Knochen' },
+            ROSEGUARD: { name: 'RoseGuard', price: 30, benefits: ['Vit A, C, E', 'Antioxidantien'], reason: 'Immunsystem' },
+            MULTI_WOMEN: { name: 'Multivitamin für Sie', price: 30, benefits: ['Vitamine & Mineralien', 'Frauengesundheit'], reason: 'Vitamine' },
+            MULTI_MEN: { name: 'Multivitamin für Ihn', price: 30, benefits: ['Vitamine & Mineralien', 'Männergesundheit'], reason: 'Vitamine' },
+            IMMUNE_BOOST: { name: 'Immunity Booster', price: 25, benefits: ['Vit C, D, Zink'], reason: 'Immunsystem' },
+            BETA_HEART: { name: 'Beta Heart', price: 40, benefits: ['Beta-Glucan', 'Cholesterin'], reason: 'Herz-Gesundheit' },
+            OCULAR_DEF: { name: 'Ocular Defense', price: 35, benefits: ['Lutein', 'Zeaxanthin'], reason: 'Augengesundheit' },
+            WOMAN_CHOICE: { name: 'Woman\'s Choice', price: 35, benefits: ['Isoflavone', 'Hormonbalance'], reason: 'Frauengesundheit' },
+            RELAX_TEA: { name: 'Relaxation Tea', price: 25, benefits: ['Beruhigend', 'Kräuter'], reason: 'Entspannung' },
+            
+            // KINDER
+            KIDS_SHAKE_STR: { name: 'Kids Shake Strawberry', price: 35, benefits: ['Vitamine A-E-C-D', 'Kalzium'], reason: 'Kinderernährung' },
+            KIDS_SHAKE_CHO: { name: 'Kids Shake Chocolate', price: 35, benefits: ['Vitamine A-E-C-D', 'Kalzium'], reason: 'Kinderernährung' },
+        };
+
+        const questions = [
+            {
+                id: 'target',
+                question: 'Für wen suchst du?',
+                options: [
+                    { value: 'self', label: 'Für mich', emoji: '👤' },
+                    { value: 'child', label: 'Kind 4-17', emoji: '👶' },
+                    { value: 'pregnant', label: 'Schwanger', emoji: '🤰' },
+                    { value: 'postpartum', label: 'Nach Geburt', emoji: '🍼' }
+                ]
+            },
+            {
+                id: 'goals',
+                question: 'Was sind deine Hauptziele? (mehrere möglich)',
+                multiSelect: true,
+                condition: (a) => a.target === 'self',
+                options: [
+                    { value: 'weight', label: 'Abnehmen', emoji: '🎯' },
+                    { value: 'energy', label: 'Mehr Energie', emoji: '⚡' },
+                    { value: 'sport', label: 'Sport & Fitness', emoji: '💪' },
+                    { value: 'beauty', label: 'Beauty & Anti-Aging', emoji: '✨' },
+                    { value: 'health', label: 'Gesundheit & Vitalität', emoji: '🛡️' }
+                ]
+            },
+            {
+                id: 'lifestyle',
+                question: 'Wie beschreibst du deinen Alltag?',
+                condition: (a) => a.target === 'self',
+                options: [
+                    { value: 'busy', label: 'Viel unterwegs', emoji: '🏃' },
+                    { value: 'active', label: 'Sehr sportlich', emoji: '🚴' },
+                    { value: 'office', label: 'Büroarbeit', emoji: '💼' }
+                ]
+            },
+            {
+                id: 'energy_level',
+                question: 'Wie ist dein Energielevel?',
+                condition: (a) => a.target === 'self',
+                options: [
+                    { value: 'low', label: 'Oft müde & erschöpft', emoji: '😴' },
+                    { value: 'ok', label: 'Geht so', emoji: '😐' },
+                    { value: 'good', label: 'Gut', emoji: '😊' }
+                ]
+            },
+            {
+                id: 'special',
+                question: 'Gibt es Besonderheiten?',
+                multiSelect: true,
+                options: [
+                    { value: 'vegan', label: 'Vegan', emoji: '🌱' },
+                    { value: 'no_caff', label: 'Kein Koffein', emoji: '🚫' },
+                    { value: 'none', label: 'Keine', emoji: '✅' }
+                ]
+            }
+        ];
+
+        function HerbalifeCoach() {
+            const [step, setStep] = useState(0);
+            const [answers, setAnswers] = useState({});
+            const [showResult, setShowResult] = useState(false);
+
+            const getRecs = () => {
+                const { target, goals = [], lifestyle, energy_level, special = [] } = answers;
+                const recs = [];
+                const reasons = [];
+                const warnings = [];
+                let total = 0;
+
+                const add = (id, reason) => {
+                    if (!recs.includes(id) && products[id]) {
+                        recs.push(id);
+                        reasons.push(`${products[id].name} - ${reason}`);
+                        total += products[id].price;
+                    }
+                };
+
+                // KINDER-FLOW
+                if (target === 'child') {
+                    add('KIDS_SHAKE_STR', 'Kinderernährung');
+                    add('OMEGA3', 'Gehirn & Konzentration');
+                    add('ALOE_ORI', 'Verdauung');
+                    warnings.push('✅ Bessere Noten & Konzentration nach 4-6 Wochen!');
+                } 
+                // SCHWANGERSCHAFT
+                else if (target === 'pregnant') {
+                    add('F1_VAN', 'Basis ohne Koffein');
+                    add('ALOE_ORI', 'Verdauung');
+                    add('OMEGA3', 'Baby-Entwicklung');
+                    add('OAT_FBR', 'Verdauungsprobleme');
+                    add('MULTI_WOMEN', 'Vitamine');
+                    warnings.push('🤰 Bitte mit Arzt/Hebamme besprechen!');
+                } 
+                // NACH GEBURT
+                else if (target === 'postpartum') {
+                    add('F1_VAN', 'Gewichtskontrolle');
+                    add('PDM_VAN', 'Hautstraffung');
+                    add('COLL_SKIN', 'Straffe Bauchhaut');
+                    add('ALOE_ORI', 'Regeneration');
+                    add('OMEGA3', 'Energie');
+                    warnings.push('💪 Protein + Collagen = Straffe Haut!');
+                } 
+                // ERWACHSENE
+                else if (target === 'self') {
+                    // Basis für alle
+                    add('ALOE_ORI', 'Verdauung als Basis');
+
+                    // ABNEHMEN
+                    if (goals.includes('weight')) {
+                        if (special.includes('vegan')) {
+                            add('TRI_SEL_BAN', 'Vegane Basis');
+                            add('TRI_SEL_CHO', 'Vegane Vielfalt');
+                        } else {
+                            add('F1_VAN', 'Wie Jürgens 23kg!');
+                            add('F1_CHO', 'Geschmacksvielfalt');
+                            add('PDM_VAN', 'Extra Protein');
+                        }
+                        
+                        if (!special.includes('no_caff')) {
+                            add('TEA_ORI', 'Stoffwechsel-Boost');
+                            add('THERMO', 'Fettverbrennung');
+                            warnings.push('⚠️ Koffein - nicht nach 16 Uhr');
+                        }
+                        
+                        add('OAT_FBR', 'Sättigung & Ballaststoffe');
+                        
+                        if (lifestyle === 'busy') {
+                            add('F1X_DC', 'Für unterwegs');
+                            add('PROT_BITES', 'Gesunder Snack');
+                        }
+                    }
+
+                    // ENERGIE
+                    if (goals.includes('energy') || energy_level === 'low' || energy_level === 'ok') {
+                        if (!special.includes('no_caff')) {
+                            add('MIND', 'Konzentration & Fokus');
+                            if (!goals.includes('weight')) add('TEA_LEM', 'Energie-Boost');
+                            if (energy_level === 'low') {
+                                add('LIFT_GRP', 'Starker Energy-Kick');
+                                add('HPIC_LAT', 'Protein + Koffein');
+                            }
+                        }
+                        add('CELL_ACT', 'Zellenergie');
+                        add('MULTI_WOMEN', 'B-Vitamine');
+                    }
+
+                    // SPORT
+                    if (goals.includes('sport') || lifestyle === 'active') {
+                        add('H24_HYDR', 'Hydration');
+                        add('H24_CR7', 'Ausdauer & Performance');
+                        add('H24_REBUILD', 'Muskelaufbau');
+                        
+                        if (!goals.includes('weight')) {
+                            add('PDM_VAN', 'Extra Protein');
+                        }
+                        
+                        add('H24_PREPARE', 'Pre-Workout Boost');
+                        add('H24_ACH_DC', 'Protein-Riegel');
+                        
+                        if (lifestyle === 'active') {
+                            add('H24_PROLONG', 'Langzeit-Ausdauer');
+                            add('H24_RESTORE', 'Regeneration');
+                        }
+                    }
+
+                    // BEAUTY
+                    if (goals.includes('beauty')) {
+                        if (!special.includes('vegan')) {
+                            add('COLL_SKIN', 'Hautelastizität');
+                            warnings.push('✨ Sichtbare Ergebnisse nach 6-8 Wochen');
+                        }
+                        
+                        add('SKIN_DAY_CREAM', 'Tägliche Pflege');
+                        add('SKIN_NIGHT_CREAM', 'Regeneration nachts');
+                        add('SKIN_SERUM', 'Anti-Aging Power');
+                        add('SKIN_EYE_GEL', 'Frische Augenpartie');
+                        
+                        if (!goals.includes('sport') && !goals.includes('weight')) {
+                            add('OMEGA3', 'Haut von innen');
+                        }
+                        
+                        add('ALOE_SHAMPOO', 'Gesundes Haar');
+                    }
+
+                    // GESUNDHEIT
+                    if (goals.includes('health')) {
+                        if (!goals.includes('beauty') && !goals.includes('sport')) {
+                            add('OMEGA3', 'Herz & Gehirn');
+                        }
+                        
+                        add('NITRO', 'Regeneration nachts');
+                        add('XTRACAL', 'Knochen & Zähne');
+                        add('ROSEGUARD', 'Antioxidantien');
+                        add('IMMUNE_BOOST', 'Immunsystem');
+                        add('MICR_MAX', 'Darmflora');
+                        
+                        if (energy_level !== 'good') {
+                            add('MULTI_WOMEN', 'Vitamine & Mineralien');
+                        }
+                    }
+
+                    // Lifestyle-spezifisch
+                    if (lifestyle === 'busy' && !goals.includes('weight')) {
+                        add('F1X_DC', 'Mahlzeit unterwegs');
+                        add('PROT_CHIPS_BBQ', 'Gesunder Snack');
+                    }
+                    
+                    if (lifestyle === 'office') {
+                        if (!goals.includes('energy') && !special.includes('no_caff')) {
+                            add('MIND', 'Fokus im Büro');
+                        }
+                        add('RELAX_TEA', 'Entspannung');
+                    }
+                }
+
+                // Sortiere nach Wichtigkeit (erste 8-12 Produkte)
+                const maxProducts = target === 'self' ? 12 : 6;
+                if (recs.length > maxProducts) {
+                    recs.splice(maxProducts);
+                    reasons.splice(maxProducts);
+                    // Neuberechnung total
+                    total = recs.reduce((sum, id) => sum + products[id].price, 0);
+                }
+
+                return { recs, reasons, warnings, total };
+            };
+
+            const handleAnswer = (val) => {
+                const q = questions[step];
+                if (q.multiSelect) {
+                    const curr = answers[q.id] || [];
+                    const newVal = val === 'none' ? ['none'] : 
+                        curr.includes(val) ? curr.filter(v => v !== val) : 
+                        [...curr.filter(v => v !== 'none'), val];
+                    setAnswers({ ...answers, [q.id]: newVal });
+                } else {
+                    setAnswers({ ...answers, [q.id]: val });
+                    setTimeout(() => goNext(), 300);
+                }
+            };
+
+            const goNext = () => {
+                let next = step + 1;
+                while (next < questions.length && questions[next].condition && !questions[next].condition(answers)) {
+                    next++;
+                }
+                next < questions.length ? setStep(next) : setShowResult(true);
+            };
+
+            const reset = () => {
+                setStep(0);
+                setAnswers({});
+                setShowResult(false);
+            };
+
+            const rec = showResult ? getRecs() : null;
+            const q = questions[step];
+            const curr = answers[q?.id] || (q?.multiSelect ? [] : null);
+
+            if (showResult && rec) {
+                const daily = (rec.total / 30).toFixed(2);
+                
+                return (
+                    <div className="min-h-screen bg-gradient-to-br from-green-50 to-teal-50 p-4">
+                        <div className="max-w-4xl mx-auto">
+                            {/* Success Story Header */}
+                            <div className="bg-gradient-to-r from-green-600 to-emerald-600 rounded-2xl p-6 mb-6 text-white">
+                                <h3 className="text-2xl font-bold">⭐ Jürgen: 120kg → 97kg</h3>
+                                <p className="text-green-50">23kg in 10 Monaten mit Herbalife!</p>
+                            </div>
+
+                            {/* Ergebnis-Header */}
+                            <div className="text-center mb-6">
+                                <div className="inline-flex items-center gap-2 bg-green-100 text-green-800 px-4 py-2 rounded-full mb-4">
+                                    <span className="font-semibold">✓ Deine persönliche Empfehlung</span>
+                                </div>
+                                <h1 className="text-3xl font-bold">Perfekt für dich! 🎯</h1>
+                            </div>
+
+                            {/* Warnungen */}
+                            {rec.warnings.length > 0 && (
+                                <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-6">
+                                    {rec.warnings.map((w, i) => (
+                                        <p key={i} className="text-sm text-yellow-800 mb-2 last:mb-0">{w}</p>
+                                    ))}
+                                </div>
+                            )}
+
+                            {/* Produktliste */}
+                            <div className="bg-white rounded-2xl p-6 mb-6 shadow-lg">
+                                <h3 className="text-xl font-bold mb-4">Deine {rec.recs.length} Produkte</h3>
+                                <div className="grid sm:grid-cols-2 gap-4">
+                                    {rec.recs.map((id, i) => (
+                                        <div key={id} className="bg-gray-50 rounded-xl p-4 border border-gray-200 hover:border-green-300 transition">
+                                            <div className="flex gap-3 mb-3">
+                                                <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                                                    <span className="text-green-700 font-bold text-sm">{i + 1}</span>
+                                                </div>
+                                                <div>
+                                                    <h4 className="font-bold text-sm">{products[id].name}</h4>
+                                                    <p className="text-xs text-green-700">{rec.reasons[i].split(' - ')[1]}</p>
+                                                </div>
+                                            </div>
+                                            <div className="space-y-1 mb-3">
+                                                {products[id].benefits.map((b, j) => (
+                                                    <div key={j} className="flex items-center gap-2 text-xs text-gray-600">
+                                                        <div className="w-1 h-1 rounded-full bg-green-500"></div>
+                                                        {b}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            {products[id].warnings && (
+                                                <div className="text-xs text-orange-600 mb-2">⚠️ {products[id].warnings}</div>
+                                            )}
+                                            <div className="mt-3 pt-3 border-t">
+                                                <span className="text-lg font-bold text-green-600">~{products[id].price}€</span>
+                                                <span className="text-xs text-gray-500">/Monat</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Kosten-Übersicht */}
+                            <div className="bg-blue-50 rounded-2xl p-6 mb-6 border border-blue-200">
+                                <h3 className="text-xl font-bold mb-3">💰 Deine Investition in Gesundheit</h3>
+                                <div className="flex justify-between mb-2">
+                                    <span className="text-gray-700">Pro Monat:</span>
+                                    <span className="text-3xl font-bold text-blue-600">~{rec.total}€</span>
+                                </div>
+                                <div className="flex justify-between text-sm mb-4">
+                                    <span className="text-gray-600">Pro Tag:</span>
+                                    <span className="font-semibold text-blue-600">~{daily}€</span>
+                                </div>
+                                <div className="pt-4 border-t text-sm space-y-1">
+                                    <p className="text-gray-600">💡 Starbucks täglich: ~5€/Tag = 150€/Monat</p>
+                                    <p className="text-gray-600">💡 Fast Food: ~8€/Tag = 240€/Monat</p>
+                                    <p className="font-bold text-green-600">💡 Deine Gesundheit: Unbezahlbar!</p>
+                                </div>
+                            </div>
+
+                            {/* CTA */}
+                            <div className="bg-gradient-to-r from-green-600 to-emerald-600 rounded-2xl p-8 text-center text-white mb-6 shadow-xl">
+                                <h3 className="text-2xl font-bold mb-3">Bereit durchzustarten? 🚀</h3>
+                                <p className="mb-6 text-green-50">Kontaktiere mich für eine persönliche Beratung!</p>
+                                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                                    <a href="https://t.me/Thebillioairesclubphuket" target="_blank" rel="noopener noreferrer"
+                                       className="bg-white text-green-600 px-6 py-3 rounded-full font-bold hover:bg-green-50 transition">
+                                        💬 Telegram Chat
+                                    </a>
+                                    <a href="https://wa.me/66628495572" target="_blank" rel="noopener noreferrer"
+                                       className="bg-white text-green-600 px-6 py-3 rounded-full font-bold hover:bg-green-50 transition">
+                                        📞 WhatsApp
+                                    </a>
+                                </div>
+                                <button onClick={reset} className="mt-4 text-white hover:text-green-100 text-sm underline">
+                                    ← Neue Beratung starten
+                                </button>
+                            </div>
+
+                            {/* Footer */}
+                            <div className="text-center text-sm text-gray-500 space-y-1">
+                                <p>🌿 Herbalife Nutrition - Seit 1980</p>
+                                <p>✅ 30 Tage Geld-zurück-Garantie</p>
+                                <p>🏆 Official Herbalife Coach</p>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            // FRAGEBOGEN
+            return (
+                <div className="min-h-screen bg-gradient-to-br from-green-50 to-teal-50 p-4 flex items-center justify-center">
+                    <div className="max-w-2xl w-full">
+                        {/* Progress Bar */}
+                        <div className="mb-8">
+                            <div className="flex justify-between mb-2">
+                                <span className="text-sm font-semibold text-gray-600">Frage {step + 1} von {questions.length}</span>
+                                <span className="text-sm font-semibold text-green-600">{Math.round(((step + 1) / questions.length) * 100)}%</span>
+                            </div>
+                            <div className="w-full bg-gray-200 rounded-full h-2">
+                                <div className="bg-green-500 h-2 rounded-full transition-all duration-300" 
+                                     style={{ width: `${((step + 1) / questions.length) * 100}%` }}></div>
+                            </div>
+                        </div>
+
+                        {/* Frage-Card */}
+                        <div className="bg-white rounded-3xl shadow-xl p-8">
+                            <h2 className="text-3xl font-bold mb-6 text-gray-800">{q.question}</h2>
+                            <div className="space-y-3">
+                                {q.options.map((opt) => {
+                                    const selected = q.multiSelect ? curr.includes(opt.value) : curr === opt.value;
+                                    return (
+                                        <button
+                                            key={opt.value}
+                                            onClick={() => handleAnswer(opt.value)}
+                                            className={`w-full text-left p-5 rounded-xl border-2 transition-all duration-200 ${
+                                                selected 
+                                                    ? 'border-green-500 bg-green-50 shadow-md transform scale-[1.02]' 
+                                                    : 'border-gray-200 hover:border-green-300 hover:shadow-sm'
+                                            }`}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <span className="text-2xl">{opt.emoji}</span>
+                                                <span className="text-lg font-semibold flex-1">{opt.label}</span>
+                                                {selected && <span className="text-green-600 text-xl">✓</span>}
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Weiter-Button für Multi-Select */}
+                            {q.multiSelect && curr.length > 0 && (
+                                <button
+                                    onClick={goNext}
+                                    className="w-full mt-6 bg-green-600 text-white py-4 rounded-xl font-bold hover:bg-green-700 transition shadow-lg"
+                                >
+                                    Weiter →
+                                </button>
+                            )}
+                        </div>
+
+                        {/* Zurück-Button */}
+                        {step > 0 && (
+                            <button 
+                                onClick={() => setStep(Math.max(0, step - 1))} 
+                                className="mt-6 text-gray-600 hover:text-gray-900 font-semibold mx-auto block transition"
+                            >
+                                ← Zurück
+                            </button>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        ReactDOM.render(<HerbalifeCoach />, document.getElementById('root'));
+    </script>
+</body>
+</html>
